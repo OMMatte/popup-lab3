@@ -1,99 +1,121 @@
+//Authors: Lucas Wiener & Mathias Lindblom
+
 #ifndef _prime_sieve_h_
 #define _prime_sieve_h_
 
-#include <set>
 #include <vector>
-#include <assert.h>
+#include <math.h>
+#include <algorithm>
 
 typedef int number;
 
+/**
+ * Will calculate Erathostenes sieve by segmentation to not use more than O(sqrt(n)) memory,
+ * and stores the primes found in an vector for prime lookup.
+ */
 class PrimeSieve {
 	number n;
-	std::set<number> primes;
-
+	std::vector<number> primes;
+    
 public:
+	/**
+	 * Calculates the primes up to n.
+	 */
 	PrimeSieve(number n) {
 		primes = sieve(n);
 	}
-
+    
+    /**
+     * Returns true if q is a prime. q Needs to be <= n.
+     */
 	bool prime(number q) {
-		return primes.count(q) == 1;
+		auto it = std::lower_bound(primes.begin(), primes.end(), q);
+		return it != primes.end() && *it == q;
 	}
-
+    
 	size_t size() {
 		return primes.size();
 	}
-
+    
 private:
-	std::set<number> sieve(number n) {
-		auto isOdd = [](number i) {
-			return (i & 1) == 1;
-		};
-
-		auto index = [isOdd](number i) {
-			if(i == 2) {
-				return 0;
+	/**
+	 * Performs the segmented sieve.
+	 */
+	std::vector<number> sieve(number n) {
+		std::vector<number> r;
+        
+		number max = sqrt((double)n);
+        
+		int segment_size = 30000;
+        
+		std::vector<bool> low_primes = vanilla_sieve(max);
+        
+		for(int i = 2; i < low_primes.size(); i++) {
+			if(low_primes[i]) {
+				r.push_back(i);
 			}
-
-			return i / 2;
-		};
-
-		std::vector<number> v;
-
-
-		auto print = [&v]() {
-			for(int i = 0; i < v.size(); i++) {
-				printf("%d ", v[i]);
-			}
-			printf("\n");
-		};
-
-		v.push_back(2);
-
-		for(number i = 3; i <= n; i += 2) {
-			v.push_back(i);
 		}
-
-		number p = 3;
-
-		while(true) {
-			for(number q = 3 * p; q <= n; q += 2 * p) {
-				if(!isOdd(q)) {
-					continue;
+        
+		std::vector<bool> sieve(segment_size, true);
+        
+		number limit = max;
+        
+		while(limit < n) {
+			std::fill(sieve.begin(), sieve.end(), true);
+			for(number i = 2; i < low_primes.size(); i++) {
+				if(low_primes[i]) {
+					number p = i;
+                    
+					for(number k = p - (limit % p) - 1; k < segment_size; k += p) {
+						sieve[k] = false;
+					}
 				}
-
-				v[index(q)] = 0;
 			}
-
-			bool found = false;
-			for(number i = p + 2; i <= n; i += 2) {
-				if(!isOdd(i)) {
-					continue;
+            
+			for(number i = 0; i < sieve.size(); i++) {
+				if(i + limit > n) {
+					break;
 				}
-
-				if(v[index(i)] != 0) {
+                
+				if(sieve[i]) {
+					r.push_back(i + limit +1);
+				}
+			}
+            
+			limit += segment_size;
+		}
+        
+		return r;
+	}
+    
+    /**
+     * Performs a naive sieve.
+     */
+	std::vector<bool> vanilla_sieve(number n) {
+		std::vector<bool> v(n + 1, true);
+        
+		number p = 2;
+        
+		while(true) {
+			for(number q = 2 * p; q <= n; q += p) {
+				v[q] = false;
+			}
+            
+			bool found = false;
+			for(number i = p + 1; i <= n; i++) {
+				if(v[i]) {
 					p = i;
 					found = true;
 					break;
 				}
 			}
-
+            
 			if(!found) {
 				break;
 			}
 		}
-
-		std::set<number> r;
-
-		for(int i = 0; i < v.size(); i++) {
-			if(v[i] != 0) {
-				r.insert(v[i]);
-			}
-		}
-
-		// print();
-
-		return r;
+        
+		return v;
 	}
 };
 
