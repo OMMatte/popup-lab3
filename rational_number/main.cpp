@@ -1,11 +1,9 @@
-//  Created by Mathias Lindblom on 2014-01-27.
-//  Copyright (c) 2014 Mathias Lindblom. All rights reserved.
-//
+//Authors: Lucas Wiener & Mathias Lindblom
 
 #include <iostream>
 #include <stdexcept>
 
-#include "RationalNumber.h"
+#include "rational_number.h"
 
 #define PLUS '+'
 #define MINUS '-'
@@ -24,6 +22,7 @@ int main(int argc, const char * argv[]) {
         std::cin >> first;
         scanf(" %c ", &c);
         std::cin >> second;
+
         if(c == PLUS) {
             result = first + second;
         } else if(c == MINUS) {
